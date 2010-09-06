@@ -9,4 +9,5 @@ setup(
     packages=['rtmapi',],
     license='License :: OSI Approved :: MIT License',
     long_description=open('README.txt').read(),
+    requires=['httplib2 (>=0.6.0)'],
 )
