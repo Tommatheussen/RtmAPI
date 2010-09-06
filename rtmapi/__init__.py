@@ -3,13 +3,19 @@ import httplib2
 import urllib
 import xml.etree.ElementTree as ElementTree
 
-__author__ = "Michael Gruenewald"
+__author__ = "Michael Gruenewald <mail@michaelgruenewald.eu>"
 __all__ = ('Rtm',)
 
 class Rtm(object):
     _auth_url = "http://api.rememberthemilk.com/services/auth/"
     _base_url = "http://api.rememberthemilk.com/services/rest/"
     
+    """
+    @param api_key: your API key
+    @param shared_secret: your shared secret
+    @param perms: desired access permissions, one of "read", "write" and "delete"
+    @param token: token for granted access (optional)
+    """
     def __init__(self, api_key, shared_secret, perms = "read", token = None):
         self.api_key = api_key
         self.shared_secret = shared_secret
@@ -27,8 +33,12 @@ class Rtm(object):
         return RtmObject(ElementTree.fromstring(data), name)
     
     def authenticate_desktop(self):
-        frob = self._call_method("rtm.auth.getFrob", api_key = self.api_key).frob.value
-        return self._make_request_url(self.auth_url, api_key = self.api_key, perms = self.perms, frob = frob), frob
+        rsp = self._call_method("rtm.auth.getFrob", api_key=self.api_key)
+        # TODO: check rsp.stat
+        frob = rsp.frob.value
+        url = self._make_request_url(self.auth_url, api_key=self.api_key,
+                                     perms=self.perms, frob=frob)
+        return url, frob
     
     def authenticate_webapp(self):
         raise NotImplementedError
