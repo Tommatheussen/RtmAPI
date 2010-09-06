@@ -9,7 +9,6 @@ __all__ = ('Rtm',)
 class Rtm(object):
     _auth_url = "http://api.rememberthemilk.com/services/auth/"
     _base_url = "http://api.rememberthemilk.com/services/rest/"
-    
     """
     @param api_key: your API key
     @param shared_secret: your shared secret
@@ -22,16 +21,13 @@ class Rtm(object):
         self.perms = perms
         self.token = token
     
-    def _call_method_auth(self, name, **params):
-        all_params = dict(api_key = self.api_key, auth_token = self.token)
-        all_params.update(params)
-        return self._call_method(name, **all_params)
+    """
+    Authenticate as a desktop application.
     
-    def _call_method(self, name, **params):
-        infos, data = self._make_request(method = name, **params)
-        assert infos['status'] == "200"
-        return RtmObject(ElementTree.fromstring(data), name)
-    
+    @returns: (url, frob) tuple with url being the url the user should open and
+                                frob the identifier for usage with retrieve_token
+                                after the user authorized the application
+    """
     def authenticate_desktop(self):
         rsp = self._call_method("rtm.auth.getFrob", api_key=self.api_key)
         # TODO: check rsp.stat
@@ -40,18 +36,46 @@ class Rtm(object):
                                      perms=self.perms, frob=frob)
         return url, frob
     
+    """
+    Authenticate as a web application. Not implemented yet.
+    """
     def authenticate_webapp(self):
         raise NotImplementedError
     
+    """
+    Checks whether the stored token is valid.
+    @returns: bool validity
+    """
     def token_valid(self):
         if self.token is None:
             return False
-        rsp = self._call_method("rtm.auth.checkToken", api_key = self.api_key, auth_token = self.token)
+        rsp = self._call_method("rtm.auth.checkToken", api_key=self.api_key,
+                                                       auth_token = self.token)
         return rsp.stat == "ok"
     
+    """
+    Retrieves a token for the given frob.
+    @returns: bool success
+    """
     def retrieve_token(self, frob):
-        self.token = self._call_method("rtm.auth.getToken", api_key = self.api_key, frob = frob).auth.token.value
-        return self.token
+        rsp = self._call_method("rtm.auth.getToken", api_key=self.api_key,
+                                                     frob=frob)
+        if rsp.stat != "ok":
+            self.token = None
+            return False
+        
+        self.token = rsp.auth.token.value
+        return True
+    
+    def _call_method(self, name, **params):
+        infos, data = self._make_request(method = name, **params)
+        assert infos['status'] == "200"
+        return RtmObject(ElementTree.fromstring(data), name)
+    
+    def _call_method_auth(self, name, **params):
+        all_params = dict(api_key = self.api_key, auth_token = self.token)
+        all_params.update(params)
+        return self._call_method(name, **all_params)
     
     def _make_request(self, url = None, **params):
         final_url = self._make_request_url(url, **params)
