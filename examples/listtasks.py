@@ -3,7 +3,6 @@ import webbrowser
 import xml.etree.ElementTree as ElementTree
 from rtmapi import Rtm
 
-
 if __name__ == '__main__':
     # call the program as `example.py [api_key] [shared_secret]`
     # get those parameters from http://www.rememberthemilk.com/services/api/keys.rtm
@@ -28,4 +27,3 @@ if __name__ == '__main__':
     for tasklist in api.rtm.tasks.getList(filter="status:incomplete").tasks.list:
         for taskseries in tasklist.taskseries:
             print taskseries.task[0].due, taskseries.name
-
