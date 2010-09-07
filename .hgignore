@@ -4,4 +4,6 @@ syntax: glob
 *.kpf
 
 syntax: re
+^build$
+^dist$
 ^MANIFEST$
