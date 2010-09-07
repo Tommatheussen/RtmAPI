@@ -9,6 +9,7 @@ __all__ = ('Rtm',)
 class Rtm(object):
     _auth_url = "http://api.rememberthemilk.com/services/auth/"
     _base_url = "http://api.rememberthemilk.com/services/rest/"
+    
     """
     @param api_key: your API key
     @param shared_secret: your shared secret
@@ -32,7 +33,7 @@ class Rtm(object):
         rsp = self._call_method("rtm.auth.getFrob", api_key=self.api_key)
         # TODO: check rsp.stat
         frob = rsp.frob.value
-        url = self._make_request_url(self.auth_url, api_key=self.api_key,
+        url = self._make_request_url(self._auth_url, api_key=self.api_key,
                                      perms=self.perms, frob=frob)
         return url, frob
     
@@ -85,7 +86,7 @@ class Rtm(object):
         all_params = params.items() + [("api_sig", self._sign_request(params))]
         params_joined = "&".join("%s=%s" % (urllib.quote_plus(k.encode('utf-8')),
                                             urllib.quote_plus(v.encode('utf-8'))) for k, v in all_params)
-        return (url or self.base_url) + "?" + params_joined
+        return (url or self._base_url) + "?" + params_joined
     
     def _sign_request(self, params):
         param_pairs = params.items()
