@@ -6,6 +6,8 @@ import xml.etree.ElementTree as ElementTree
 __author__ = "Michael Gruenewald <mail@michaelgruenewald.eu>"
 __all__ = ('Rtm',)
 
+class RtmException(Exception): pass
+
 class Rtm(object):
     _auth_url = "http://api.rememberthemilk.com/services/auth/"
     _base_url = "http://api.rememberthemilk.com/services/rest/"
@@ -31,17 +33,19 @@ class Rtm(object):
     """
     def authenticate_desktop(self):
         rsp = self._call_method("rtm.auth.getFrob", api_key=self.api_key)
-        # TODO: check rsp.stat
         frob = rsp.frob.value
         url = self._make_request_url(self._auth_url, api_key=self.api_key,
                                      perms=self.perms, frob=frob)
         return url, frob
     
     """
-    Authenticate as a web application. Not implemented yet.
+    Authenticate as a web application.
+    @returns: url
     """
     def authenticate_webapp(self):
-        raise NotImplementedError
+        url = self._make_request_url(self._auth_url, api_key=self.api_key,
+                                     perms=self.perms)
+        return url
     
     """
     Checks whether the stored token is valid.
@@ -50,28 +54,34 @@ class Rtm(object):
     def token_valid(self):
         if self.token is None:
             return False
-        rsp = self._call_method("rtm.auth.checkToken", api_key=self.api_key,
-                                                       auth_token = self.token)
-        return rsp.stat == "ok"
+        try:
+            rsp = self._call_method("rtm.auth.checkToken", api_key=self.api_key,
+                                                           auth_token = self.token)
+        except RtmException:
+            return False
+        return True
     
     """
     Retrieves a token for the given frob.
     @returns: bool success
     """
     def retrieve_token(self, frob):
-        rsp = self._call_method("rtm.auth.getToken", api_key=self.api_key,
-                                                     frob=frob)
-        if rsp.stat != "ok":
+        try:
+            rsp = self._call_method("rtm.auth.getToken", api_key=self.api_key,
+                                                         frob=frob)
+        except RtmException, e:
             self.token = None
             return False
-        
         self.token = rsp.auth.token.value
         return True
     
     def _call_method(self, name, **params):
         infos, data = self._make_request(method = name, **params)
         assert infos['status'] == "200"
-        return RtmObject(ElementTree.fromstring(data), name)
+        rtm_obj = RtmObject(ElementTree.fromstring(data), name)
+        if rtm_obj.stat == "fail":
+            raise RtmException, (rtm_obj.err.code, rtm_obj.err.value)
+        return rtm_obj
     
     def _call_method_auth(self, name, **params):
         all_params = dict(api_key = self.api_key, auth_token = self.token)
