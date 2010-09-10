@@ -128,13 +128,16 @@ class RtmObject(object):
         "method/arguments/argument",
         "method/errors/error",
         "methods/method",
-        "list/taskseries/task",
+        "list/taskseries/notes/note",
+        "list/taskseries/participants/participant",
         "list/taskseries/task/tags/tag",
         "lists/list",
         "locations/location",
         "tasks/list",
         "tasks/list/taskseries",
-        "tasks/list/taskseries/task",
+        "tasks/list/taskseries/notes/note",
+        "tasks/list/taskseries/participants/participant",
+        "tasks/list/taskseries/tags/tag",
         "timezones/timezone",
     )
     
