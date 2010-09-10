@@ -8,7 +8,7 @@ setup(
     long_description=open('README.txt').read(),
     license='License :: OSI Approved :: MIT License',
     url='https://bitbucket.org/michaelgruenewald/rtmapi',
-    version='0.2dev',
+    version='0.2',
     packages=['rtmapi',],
     requires=['httplib2 (>=0.6.0)'],
 )
