@@ -121,29 +121,32 @@ class RtmName(object):
 
 
 class RtmObject(object):
-    _lists = (
-        "contacts/contact",
-        "groups/group",
-        "groups/group/contacts/contact",
-        "method/arguments/argument",
-        "method/errors/error",
-        "methods/method",
-        "list/taskseries/notes/note",
-        "list/taskseries/participants/participant",
-        "list/taskseries/task/tags/tag",
-        "lists/list",
-        "locations/location",
-        "tasks/list",
-        "tasks/list/taskseries",
-        "tasks/list/taskseries/notes/note",
-        "tasks/list/taskseries/participants/participant",
-        "tasks/list/taskseries/tags/tag",
-        "timezones/timezone",
-    )
+    _lists = {
+        "contacts": "contact",
+        "groups": "group",
+        "groups/group/contacts": "contact",
+        "method/arguments": "argument",
+        "method/errors": "error",
+        "methods": "method",
+        "list/taskseries/notes": "note",
+        "list/taskseries/participants": "participant",
+        "list/taskseries/task/tags": "tag",
+        "lists": "list",
+        "locations": "location",
+        "tasks": "list",
+        "tasks/list": "taskseries",
+        "tasks/list/taskseries/notes": "note",
+        "tasks/list/taskseries/participants": "participant",
+        "tasks/list/taskseries/tags": "tag",
+        "timezones": "timezone",
+    }
     
     def __init__(self, element, name):
         self._element = element
         self._name = name
+    
+    def __repr__(self):
+        return ("<RtmObject %s>" % self._name).encode('ascii', 'replace')
     
     def __getattr__(self, name):
         newname = "%s/%s" % (self._name, name)
@@ -151,10 +154,24 @@ class RtmObject(object):
             return self._element.text
         elif name in self._element.keys():
             return self._element.get(name)
-        elif newname.partition("/")[2] in self._lists:
-            return [RtmObject(element, newname) for element in self._element.findall(name)]
         else:
             return RtmObject(self._element.find(name), newname)
     
-    def __repr__(self):
-        return ("<RtmObject %s>" % self._name).encode('ascii', 'replace')
+    def _get_collection(self):
+        child_name = self._lists.get(self._name.partition("/")[2])
+        if child_name is None:
+            raise ValueError
+        new_name = "%s/%s" % (self._name, child_name)
+        return [RtmObject(element, new_name) for element in self._element.findall(child_name)]
+    
+    def __nonzero__(self):
+        return True
+    
+    def __getitem(self, key):
+        return self._get_collection()[key]
+    
+    def __iter__(self):
+        return iter(self._get_collection())
+    
+    def __len__(self):
+        return len(self._get_collection)

@@ -26,6 +26,6 @@ if __name__ == '__main__':
     
     # get all open tasks, see http://www.rememberthemilk.com/services/api/methods/rtm.tasks.getList.rtm
     result = api.rtm.tasks.getList(filter="status:incomplete")
-    for tasklist in result.tasks.list:
-        for taskseries in tasklist.taskseries:
+    for tasklist in result.tasks:
+        for taskseries in tasklist:
             print taskseries.task.due, taskseries.name
