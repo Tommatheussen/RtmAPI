@@ -5,7 +5,7 @@ setup(
     author='Michael Gruenewald',
     author_email='mail@michaelgruenewald.eu',
     description='API package for rememberthemilk.com',
-    long_description=open('README.txt').read(),
+    long_description=open('README.markdown').read(),
     license='License :: OSI Approved :: MIT License',
     url='https://bitbucket.org/michaelgruenewald/rtmapi',
     version='0.3dev',
