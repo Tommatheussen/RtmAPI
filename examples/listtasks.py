@@ -8,7 +8,7 @@ if __name__ == '__main__':
     # get those parameters from http://www.rememberthemilk.com/services/api/keys.rtm
     api_key, shared_secret = sys.argv[1:3]
     token = sys.argv[3] if len(sys.argv) >= 4 else None
-    api = Rtm(api_key, shared_secret, "read", token)
+    api = Rtm(api_key, shared_secret, "delete", token)
     
     # authenication block, see http://www.rememberthemilk.com/services/api/authentication.rtm
     # check for valid token
