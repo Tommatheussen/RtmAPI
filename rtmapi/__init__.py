@@ -80,7 +80,7 @@ class Rtm(object):
         assert infos['status'] == "200"
         rtm_obj = RtmObject(ElementTree.fromstring(data), name)
         if rtm_obj.stat == "fail":
-            raise RtmException, (rtm_obj.err.code, rtm_obj.err.value)
+            raise RtmException, (rtm_obj.err.code, rtm_obj.err.msg)
         return rtm_obj
     
     def _call_method_auth(self, name, **params):
