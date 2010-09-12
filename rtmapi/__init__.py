@@ -90,7 +90,7 @@ class Rtm(object):
     
     def _make_request(self, url = None, **params):
         final_url = self._make_request_url(url, **params)
-        return httplib2.Http().request(final_url)
+        return httplib2.Http().request(final_url, headers={'Cache-Control':'no-cache,must-revalidate,max-age=0'})
     
     def _make_request_url(self, url = None, **params):
         all_params = params.items() + [("api_sig", self._sign_request(params))]
