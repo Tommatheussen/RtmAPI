@@ -15,7 +15,8 @@ class Rtm(object):
     """
     @param api_key: your API key
     @param shared_secret: your shared secret
-    @param perms: desired access permissions, one of "read", "write" and "delete"
+    @param perms: desired access permissions, one of "read", "write"
+                  and "delete"
     @param token: token for granted access (optional)
     """
     def __init__(self, api_key, shared_secret, perms = "read", token = None):
@@ -23,13 +24,14 @@ class Rtm(object):
         self.shared_secret = shared_secret
         self.perms = perms
         self.token = token
+        self.http = httplib2.Http()
     
     """
     Authenticate as a desktop application.
     
     @returns: (url, frob) tuple with url being the url the user should open and
-                                frob the identifier for usage with retrieve_token
-                                after the user authorized the application
+                          frob the identifier for usage with retrieve_token
+                          after the user authorized the application
     """
     def authenticate_desktop(self):
         rsp = self._call_method("rtm.auth.getFrob", api_key=self.api_key)
@@ -56,7 +58,7 @@ class Rtm(object):
             return False
         try:
             rsp = self._call_method("rtm.auth.checkToken", api_key=self.api_key,
-                                                           auth_token = self.token)
+                                                           auth_token=self.token)
         except RtmException:
             return False
         return True
@@ -75,33 +77,36 @@ class Rtm(object):
         self.token = rsp.auth.token.value
         return True
     
-    def _call_method(self, name, **params):
-        infos, data = self._make_request(method = name, **params)
+    def _call_method(self, method_name, **params):
+        infos, data = self._make_request(method = method_name, **params)
         assert infos['status'] == "200"
-        rtm_obj = RtmObject(ElementTree.fromstring(data), name)
+        rtm_obj = RtmObject(ElementTree.fromstring(data), method_name)
         if rtm_obj.stat == "fail":
             raise RtmException, (rtm_obj.err.code, rtm_obj.err.msg)
         return rtm_obj
     
-    def _call_method_auth(self, name, **params):
+    def _call_method_auth(self, method_name, **params):
         all_params = dict(api_key = self.api_key, auth_token = self.token)
         all_params.update(params)
-        return self._call_method(name, **all_params)
+        return self._call_method(method_name, **all_params)
     
     def _make_request(self, url = None, **params):
         final_url = self._make_request_url(url, **params)
-        return httplib2.Http().request(final_url)
+        return self.http.request(final_url,
+                                 headers={'Cache-Control':'no-cache, max-age=0'})
     
     def _make_request_url(self, url = None, **params):
         all_params = params.items() + [("api_sig", self._sign_request(params))]
-        params_joined = "&".join("%s=%s" % (urllib.quote_plus(k.encode('utf-8')),
-                                            urllib.quote_plus(v.encode('utf-8'))) for k, v in all_params)
+        quote_utf8 = lambda s: urllib.quote_plus(s.encode('utf-8'))
+        params_joined = "&".join("%s=%s" % (quote_utf8(k), quote_utf8(v))
+                                           for k, v in all_params)
         return (url or self._base_url) + "?" + params_joined
     
     def _sign_request(self, params):
         param_pairs = params.items()
         param_pairs.sort()
-        request_string = self.shared_secret + u''.join(k + v for k, v in param_pairs)
+        request_string = self.shared_secret + u''.join(k+v
+                                                       for k, v in param_pairs)
         return hashlib.md5(request_string.encode('utf-8')).hexdigest()
     
     def __getattr__(self, name):
@@ -162,7 +167,9 @@ class RtmObject(object):
         if child_name is None:
             raise ValueError
         new_name = "%s/%s" % (self._name, child_name)
-        return [RtmObject(element, new_name) for element in self._element.findall(child_name)]
+        return [RtmObject(element, new_name)
+                for element
+                in self._element.findall(child_name)]
     
     def __nonzero__(self):
         return True
