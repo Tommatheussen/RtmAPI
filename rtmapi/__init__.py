@@ -77,18 +77,18 @@ class Rtm(object):
         self.token = rsp.auth.token.value
         return True
     
-    def _call_method(self, name, **params):
-        infos, data = self._make_request(method = name, **params)
+    def _call_method(self, method_name, **params):
+        infos, data = self._make_request(method = method_name, **params)
         assert infos['status'] == "200"
-        rtm_obj = RtmObject(ElementTree.fromstring(data), name)
+        rtm_obj = RtmObject(ElementTree.fromstring(data), method_name)
         if rtm_obj.stat == "fail":
             raise RtmException, (rtm_obj.err.code, rtm_obj.err.msg)
         return rtm_obj
     
-    def _call_method_auth(self, name, **params):
+    def _call_method_auth(self, method_name, **params):
         all_params = dict(api_key = self.api_key, auth_token = self.token)
         all_params.update(params)
-        return self._call_method(name, **all_params)
+        return self._call_method(method_name, **all_params)
     
     def _make_request(self, url = None, **params):
         final_url = self._make_request_url(url, **params)
