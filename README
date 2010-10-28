@@ -48,4 +48,9 @@ example script show the usage of ``rtm.tasks.getList``. Compare the
 example script with the ``rtm.tasks.getList`` documentation to
 understand how lists work.
 
+Contributors
+~~~~~~~~~~~~
+
+* Michael Grünewald
+* Marcin Kasperski
 
