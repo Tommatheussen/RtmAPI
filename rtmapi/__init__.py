@@ -79,7 +79,7 @@ class Rtm(object):
     
     def _call_method(self, method_name, **params):
         infos, data = self._make_request(method = method_name, **params)
-        if infos.status != "200":
+        if infos.status != 200:
             raise RtmException("Request %s failed. Status: %s, reason: %s" % (
                     method_name, infos.status, infos.reason))
         rtm_obj = RtmObject(ElementTree.fromstring(data), method_name)
@@ -92,17 +92,17 @@ class Rtm(object):
         all_params.update(params)
         return self._call_method(method_name, **all_params)
     
-    def _make_request(self, url = None, **params):
-        final_url = self._make_request_url(url, **params)
+    def _make_request(self, request_url = None, **params):
+        final_url = self._make_request_url(request_url, **params)
         return self.http.request(final_url,
                                  headers={'Cache-Control':'no-cache, max-age=0'})
     
-    def _make_request_url(self, url = None, **params):
+    def _make_request_url(self, request_url = None, **params):
         all_params = params.items() + [("api_sig", self._sign_request(params))]
         quote_utf8 = lambda s: urllib.quote_plus(s.encode('utf-8'))
         params_joined = "&".join("%s=%s" % (quote_utf8(k), quote_utf8(v))
                                            for k, v in all_params)
-        return (url or self._base_url) + "?" + params_joined
+        return (request_url or self._base_url) + "?" + params_joined
     
     def _sign_request(self, params):
         param_pairs = params.items()
