@@ -101,14 +101,16 @@ class Rtm(object):
         all_params = params.items() + [("api_sig", self._sign_request(params))]
         quote_utf8 = lambda s: urllib.quote_plus(s.encode('utf-8'))
         params_joined = "&".join("%s=%s" % (quote_utf8(k), quote_utf8(v))
-                                           for k, v in all_params)
+                                           for k, v in all_params
+                                           if v is not None)
         return (request_url or self._base_url) + "?" + params_joined
     
     def _sign_request(self, params):
         param_pairs = params.items()
         param_pairs.sort()
         request_string = self.shared_secret + u''.join(k+v
-                                                       for k, v in param_pairs)
+                                                       for k, v in param_pairs
+                                                       if v is not None)
         return hashlib.md5(request_string.encode('utf-8')).hexdigest()
     
     def __getattr__(self, name):
