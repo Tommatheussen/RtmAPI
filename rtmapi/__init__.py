@@ -79,7 +79,9 @@ class Rtm(object):
     
     def _call_method(self, method_name, **params):
         infos, data = self._make_request(method = method_name, **params)
-        assert infos['status'] == "200"
+        if infos.status != "200":
+            raise RtmException("Request %s failed. Status: %s, reason: %s" % (
+                    method_name, infos.status, infos.reason))
         rtm_obj = RtmObject(ElementTree.fromstring(data), method_name)
         if rtm_obj.stat == "fail":
             raise RtmException, (rtm_obj.err.code, rtm_obj.err.msg)
