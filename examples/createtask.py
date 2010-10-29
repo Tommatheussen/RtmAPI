@@ -31,14 +31,14 @@ if __name__ == '__main__':
 
     # Create new list
     result = api.rtm.lists.add(timeline = timeline,
-                               name = u"Zażółć gęślą test")
+                               name = u"an example list")
     list_id = result.list.id
     print "Created list with id", list_id
 
     # And task
     result = api.rtm.tasks.add(timeline = timeline,
                                list_id = list_id,
-                               name = u"Żółć gęśą zajaźniam")
+                               name = u"some task")
     task_id = result.list.taskseries.task.id
     print task_id
     print "Created task", task_id
