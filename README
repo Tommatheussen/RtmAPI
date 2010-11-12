@@ -19,13 +19,13 @@ It's important that you understand the example script to understand
 how to use *RtmAPI*. It shows desktop authorization and a basic
 list operation.
 
-Authorization
-~~~~~~~~~~~~~
+Authentication
+~~~~~~~~~~~~~~
 
 See
 http://www.rememberthemilk.com/services/api/authentication.rtm.
 
-User authorization for desktop applications can be done using the
+User authentication for desktop applications can be done using the
 ``authenticate_desktop`` and ``retrieve_token`` methods, whereas
 web applications should use the ``authenticate_web`` and
 ``retrieve_token`` methods.
