@@ -1,6 +1,9 @@
 The changelog lists new feature only. Bugfixes and bugfix releases are 
 omitted (see the repository for those information).
 
+RtmAPI 0.5
+  * support for Python 3
+
 RtmAPI 0.4
   * support parameters being None
 
