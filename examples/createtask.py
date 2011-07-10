@@ -1,6 +1,5 @@
 import sys
 import webbrowser
-import xml.etree.ElementTree as ElementTree
 from rtmapi import Rtm
 
 if __name__ == '__main__':
