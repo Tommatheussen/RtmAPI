@@ -1,15 +1,14 @@
 from setuptools import setup
-import codecs
 
 setup(
     name='RtmAPI',
     author='Michael Gruenewald',
     author_email='mail@michaelgruenewald.eu',
     description='API package for rememberthemilk.com',
-    long_description=codecs.getreader('utf-8')(open('README', 'rb')).read(),
+    long_description=open('README').read(),
     license='License :: OSI Approved :: MIT License',
     url='https://bitbucket.org/michaelgruenewald/rtmapi',
-    version='0.5.1',
+    version='0.5.2',
     packages=['rtmapi',],
     requires=['httplib2 (>=0.6.0)'],
     classifiers=[
