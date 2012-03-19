@@ -4,7 +4,7 @@ import urllib
 import xml.etree.ElementTree as ElementTree
 
 __author__ = "Michael Gruenewald <mail@michaelgruenewald.eu>"
-__all__ = ('Rtm',)
+__all__ = ('Rtm', 'RtmException')
 
 class RtmException(Exception): pass
 
