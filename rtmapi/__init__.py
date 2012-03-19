@@ -12,48 +12,48 @@ class Rtm(object):
     _auth_url = "http://api.rememberthemilk.com/services/auth/"
     _base_url = "http://api.rememberthemilk.com/services/rest/"
     
-    """
-    @param api_key: your API key
-    @param shared_secret: your shared secret
-    @param perms: desired access permissions, one of "read", "write"
-                  and "delete"
-    @param token: token for granted access (optional)
-    """
     def __init__(self, api_key, shared_secret, perms = "read", token = None):
+        """
+        @param api_key: your API key
+        @param shared_secret: your shared secret
+        @param perms: desired access permissions, one of "read", "write"
+                      and "delete"
+        @param token: token for granted access (optional)
+        """
         self.api_key = api_key
         self.shared_secret = shared_secret
         self.perms = perms
         self.token = token
         self.http = httplib2.Http()
     
-    """
-    Authenticate as a desktop application.
-    
-    @returns: (url, frob) tuple with url being the url the user should open and
-                          frob the identifier for usage with retrieve_token
-                          after the user authorized the application
-    """
     def authenticate_desktop(self):
+        """
+        Authenticate as a desktop application.
+        
+        @returns: (url, frob) tuple with url being the url the user should open and
+                              frob the identifier for usage with retrieve_token
+                              after the user authorized the application
+        """
         rsp = self._call_method("rtm.auth.getFrob", api_key=self.api_key)
         frob = rsp.frob.value
         url = self._make_request_url(self._auth_url, api_key=self.api_key,
                                      perms=self.perms, frob=frob)
         return url, frob
     
-    """
-    Authenticate as a web application.
-    @returns: url
-    """
     def authenticate_webapp(self):
+        """
+        Authenticate as a web application.
+        @returns: url
+        """
         url = self._make_request_url(self._auth_url, api_key=self.api_key,
                                      perms=self.perms)
         return url
     
-    """
-    Checks whether the stored token is valid.
-    @returns: bool validity
-    """
     def token_valid(self):
+        """
+        Checks whether the stored token is valid.
+        @returns: bool validity
+        """
         if self.token is None:
             return False
         try:
@@ -63,11 +63,11 @@ class Rtm(object):
             return False
         return True
     
-    """
-    Retrieves a token for the given frob.
-    @returns: bool success
-    """
     def retrieve_token(self, frob):
+        """
+        Retrieves a token for the given frob.
+        @returns: bool success
+        """
         try:
             rsp = self._call_method("rtm.auth.getToken", api_key=self.api_key,
                                                          frob=frob)
