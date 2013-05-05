@@ -101,10 +101,8 @@ class Rtm(object):
     
     def _make_request_url(self, request_url = None, **params):
         all_params = params.items() + [("api_sig", self._sign_request(params))]
-        quote_utf8 = lambda s: urllib.quote_plus(s.encode('utf-8'))
-        params_joined = "&".join("%s=%s" % (quote_utf8(k), quote_utf8(v))
-                                           for k, v in all_params
-                                           if v is not None)
+        params_joined = urllib.urlencode(
+            [(k, v.encode('utf-8')) for k, v in all_params])
         return (request_url or self._base_url) + "?" + params_joined
     
     def _sign_request(self, params):
