@@ -6,13 +6,16 @@ import xml.etree.ElementTree as ElementTree
 __author__ = "Michael Gruenewald <mail@michaelgruenewald.eu>"
 __all__ = ('Rtm', 'RtmException')
 
-class RtmException(Exception): pass
+
+class RtmException(Exception):
+    pass
+
 
 class Rtm(object):
     _auth_url = "http://api.rememberthemilk.com/services/auth/"
     _base_url = "http://api.rememberthemilk.com/services/rest/"
-    
-    def __init__(self, api_key, shared_secret, perms = "read", token = None):
+
+    def __init__(self, api_key, shared_secret, perms="read", token=None):
         """
         @param api_key: your API key
         @param shared_secret: your shared secret
@@ -25,21 +28,22 @@ class Rtm(object):
         self.perms = perms
         self.token = token
         self.http = httplib2.Http()
-    
+
     def authenticate_desktop(self):
         """
         Authenticate as a desktop application.
-        
-        @returns: (url, frob) tuple with url being the url the user should open and
-                              frob the identifier for usage with retrieve_token
-                              after the user authorized the application
+
+        @returns: (url, frob) tuple with url being the url the user should open
+                              and frob the identifier for usage with
+                              retrieve_token after the user authorized the
+                              application
         """
         rsp = self._call_method("rtm.auth.getFrob", api_key=self.api_key)
         frob = rsp.frob.value
         url = self._make_request_url(self._auth_url, api_key=self.api_key,
                                      perms=self.perms, frob=frob)
         return url, frob
-    
+
     def authenticate_webapp(self):
         """
         Authenticate as a web application.
@@ -48,7 +52,7 @@ class Rtm(object):
         url = self._make_request_url(self._auth_url, api_key=self.api_key,
                                      perms=self.perms)
         return url
-    
+
     def token_valid(self):
         """
         Checks whether the stored token is valid.
@@ -57,62 +61,65 @@ class Rtm(object):
         if self.token is None:
             return False
         try:
-            rsp = self._call_method("rtm.auth.checkToken", api_key=self.api_key,
-                                                           auth_token=self.token)
+            self._call_method("rtm.auth.checkToken",
+                              api_key=self.api_key,
+                              auth_token=self.token)
         except RtmException:
             return False
         return True
-    
+
     def retrieve_token(self, frob):
         """
         Retrieves a token for the given frob.
         @returns: bool success
         """
         try:
-            rsp = self._call_method("rtm.auth.getToken", api_key=self.api_key,
-                                                         frob=frob)
-        except RtmException, e:
+            rsp = self._call_method("rtm.auth.getToken",
+                                    api_key=self.api_key,
+                                    frob=frob)
+        except RtmException:
             self.token = None
             return False
         self.token = rsp.auth.token.value
         return True
-    
+
     def _call_method(self, method_name, **params):
-        infos, data = self._make_request(method = method_name, **params)
+        infos, data = self._make_request(method=method_name, **params)
         if infos.status != 200:
-            raise RtmException("Request %s failed (HTTP). Status: %s, reason: %s" % (
+            raise RtmException(
+                "Request %s failed (HTTP). Status: %s, reason: %s" % (
                     method_name, infos.status, infos.reason))
         rtm_obj = RtmObject(ElementTree.fromstring(data), method_name)
         if rtm_obj.stat == "fail":
-            #raise RtmException, (rtm_obj.err.code, rtm_obj.err.msg)
-            raise RtmException("Request %s failed. Status: %s, reason: %s" % (
+            raise RtmException(
+                "Request %s failed. Status: %s, reason: %s" % (
                     method_name, rtm_obj.err.code, rtm_obj.err.msg))
         return rtm_obj
-    
+
     def _call_method_auth(self, method_name, **params):
-        all_params = dict(api_key = self.api_key, auth_token = self.token)
+        all_params = dict(api_key=self.api_key, auth_token=self.token)
         all_params.update(params)
         return self._call_method(method_name, **all_params)
-    
-    def _make_request(self, request_url = None, **params):
+
+    def _make_request(self, request_url=None, **params):
         final_url = self._make_request_url(request_url, **params)
-        return self.http.request(final_url,
-                                 headers={'Cache-Control':'no-cache, max-age=0'})
-    
-    def _make_request_url(self, request_url = None, **params):
+        return self.http.request(final_url, headers={
+            'Cache-Control': 'no-cache, max-age=0'})
+
+    def _make_request_url(self, request_url=None, **params):
         all_params = params.items() + [("api_sig", self._sign_request(params))]
         params_joined = urllib.urlencode(
             [(k, v.encode('utf-8')) for k, v in all_params])
         return (request_url or self._base_url) + "?" + params_joined
-    
+
     def _sign_request(self, params):
         param_pairs = params.items()
         param_pairs.sort()
-        request_string = self.shared_secret + u''.join(k+v
+        request_string = self.shared_secret + u''.join(k + v
                                                        for k, v in param_pairs
                                                        if v is not None)
         return hashlib.md5(request_string.encode('utf-8')).hexdigest()
-    
+
     def __getattr__(self, name):
         return RtmName(self, name)
 
@@ -121,10 +128,10 @@ class RtmName(object):
     def __init__(self, rtm, name):
         self.rtm = rtm
         self.name = name
-    
+
     def __call__(self, **params):
         return self.rtm._call_method_auth(self.name, **params)
-    
+
     def __getattr__(self, name):
         return RtmName(self.rtm, "%s.%s" % (self.name, name))
 
@@ -149,14 +156,14 @@ class RtmObject(object):
         "tasks/list/taskseries/tags": "tag",
         "timezones": "timezone",
     }
-    
+
     def __init__(self, element, name):
         self._element = element
         self._name = name
-    
+
     def __repr__(self):
         return ("<RtmObject %s>" % self._name).encode('ascii', 'replace')
-    
+
     def __getattr__(self, name):
         newname = "%s/%s" % (self._name, name)
         if name == "value":
@@ -165,7 +172,7 @@ class RtmObject(object):
             return self._element.get(name)
         else:
             return RtmObject(self._element.find(name), newname)
-    
+
     def _get_collection(self):
         child_name = self._lists.get(self._name.partition("/")[2])
         if child_name is None:
@@ -174,15 +181,15 @@ class RtmObject(object):
         return [RtmObject(element, new_name)
                 for element
                 in self._element.findall(child_name)]
-    
+
     def __nonzero__(self):
         return True
-    
+
     def __getitem(self, key):
         return self._get_collection()[key]
-    
+
     def __iter__(self):
         return iter(self._get_collection())
-    
+
     def __len__(self):
         return len(self._get_collection)
