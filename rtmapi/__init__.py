@@ -142,60 +142,79 @@ class RtmName(object):
         return RtmName(self.rtm, "%s.%s" % (self.name, name))
 
 
-class RtmObject(object):
-    _lists = {
+class RtmBase(object):
+    LISTS = {
+        "arguments": "argument",
         "contacts": "contact",
+        "errors": "error",
         "groups": "group",
-        "groups/group/contacts": "contact",
-        "method/arguments": "argument",
-        "method/errors": "error",
-        "methods": "method",
-        "list/taskseries/notes": "note",
-        "list/taskseries/participants": "participant",
-        "list/taskseries/task/tags": "tag",
-        "lists": "list",
-        "locations": "location",
+        "list": "taskseries",
         "tasks": "list",
-        "tasks/list": "taskseries",
-        "tasks/list/taskseries/notes": "note",
-        "tasks/list/taskseries/participants": "participant",
-        "tasks/list/taskseries/tags": "tag",
+        "methods": "method",
+        "notes": "note",
+        "participants": "participant",
+        "tags": "tag",
         "timezones": "timezone",
     }
 
-    def __init__(self, element, name):
-        self._element = element
-        self._name = name
+    @classmethod
+    def new_object(cls, element):
+        if element.tag in cls.LISTS:
+            return RtmIterableObject(element,
+                                     element.tag,
+                                     cls.LISTS[element.tag])
+        return RtmObject(element, element.tag)
 
-    def __repr__(self):
-        return ("<RtmObject %s>" % self._name).encode('ascii', 'replace')
 
-    def __getattr__(self, name):
-        newname = "%s/%s" % (self._name, name)
-        if name == "value":
-            return self._element.text
-        elif name in self._element.keys():
-            return self._element.get(name)
-        else:
-            return RtmObject(self._element.find(name), newname)
+class RtmIterable(RtmBase):
+    def __init__(self, element, tag):
+        self.__element = element
+        self.__tag = tag
 
-    def _get_collection(self):
-        child_name = self._lists.get(self._name.partition("/")[2])
-        if child_name is None:
-            raise ValueError
-        new_name = "%s/%s" % (self._name, child_name)
-        return [RtmObject(element, new_name)
+    def __get_collection(self):
+        return [self.new_object(element)
                 for element
-                in self._element.findall(child_name)]
-
-    def __nonzero__(self):
-        return True
+                in self.__element.findall(self.__tag)]
 
     def __getitem(self, key):
-        return self._get_collection()[key]
+        return self.__get_collection()[key]
 
     def __iter__(self):
-        return iter(self._get_collection())
+        return iter(self.__get_collection())
 
     def __len__(self):
-        return len(self._get_collection)
+        return len(self.__get_collection)
+
+
+class RtmObject(RtmBase):
+    MORE_LISTS = {
+        ("list", "deleted"): "deleted/taskseries",
+    }
+
+    def __init__(self, element, name):
+        self.__element = element
+        self.__name = name
+
+    def __repr__(self):
+        return "<%s %s>" % (type(self),
+                            self.__name.encode('ascii', 'replace'))
+
+    def __getattr__(self, name):
+        if name == "value":
+            return self.__element.text
+        elif name in self.__element.keys():
+            return self.__element.get(name)
+        elif (self.__name, name) in self.MORE_LISTS:
+            return RtmIterable(self.__element,
+                               self.MORE_LISTS[self.__name, name])
+        else:
+            element = self.__element.find(name)
+            if element is None:
+                return None
+            return self.new_object(element)
+
+
+class RtmIterableObject(RtmObject, RtmIterable):
+    def __init__(self, element, name, tag):
+        RtmObject.__init__(self, element, name)
+        RtmIterable.__init__(self, element, tag)
