@@ -11,6 +11,11 @@ class RtmException(Exception):
     pass
 
 
+class RtmRequestFailedException(RtmException):
+    def __str__(self):
+        return "Request %s failed. Status: %s, reason: %s." % self.args
+
+
 class Rtm(object):
     _auth_url = "http://api.rememberthemilk.com/services/auth/"
     _base_url = "http://api.rememberthemilk.com/services/rest/"
@@ -89,12 +94,13 @@ class Rtm(object):
             raise RtmException(
                 "Request %s failed (HTTP). Status: %s, reason: %s" % (
                     method_name, infos.status, infos.reason))
-        rtm_obj = RtmObject(ElementTree.fromstring(data), method_name)
-        if rtm_obj.stat == "fail":
-            raise RtmException(
-                "Request %s failed. Status: %s, reason: %s" % (
-                    method_name, rtm_obj.err.code, rtm_obj.err.msg))
-        return rtm_obj
+        tree = ElementTree.fromstring(data)
+        assert tree.tag == "rsp"
+        if tree.get("stat") == "fail":
+            err = tree.find("err")
+            raise RtmRequestFailedException(
+                method_name, err.get("code"), err.get("msg"))
+        return RtmObject(tree, tree.tag)
 
     def _call_method_auth(self, method_name, **params):
         all_params = dict(api_key=self.api_key, auth_token=self.token)
