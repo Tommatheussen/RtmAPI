@@ -10,8 +10,8 @@ RtmAPI
    feel free to drop me a message or open an issue.
 
 This is an API package for
-`Remember the Milk <http://www.rememberthemilk.com>`_. Using their
-API and this package you can create Python applications accessing
+`Remember the Milk <http://www.rememberthemilk.com>`_. Using `their
+API <https://www.rememberthemilk.com/services/api/>`_ and this package you can create Python applications accessing
 your task lists on RTM.
 
 See the example script (in the ``examples`` folder) for basic
