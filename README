@@ -4,11 +4,6 @@
 RtmAPI
 ======
 
-.. attention::
-   This project is currently unmaintained due to a mix of me not being 
-   a RTM user anymore and a lack of time. If you want to take it over, 
-   feel free to drop me a message or open an issue.
-
 This is an API package for
 `Remember the Milk <http://www.rememberthemilk.com>`_. Using `their
 API <https://www.rememberthemilk.com/services/api/>`_ and this package you can create Python applications accessing
