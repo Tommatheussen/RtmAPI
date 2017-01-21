@@ -20,18 +20,20 @@ class Rtm(object):
     _auth_url = "http://api.rememberthemilk.com/services/auth/"
     _base_url = "http://api.rememberthemilk.com/services/rest/"
 
-    def __init__(self, api_key, shared_secret, perms="read", token=None):
+    def __init__(self, api_key, shared_secret, perms="read", token=None, api_version=None):
         """
         @param api_key: your API key
         @param shared_secret: your shared secret
         @param perms: desired access permissions, one of "read", "write"
                       and "delete"
         @param token: token for granted access (optional)
+        @param api_version: version of API (optional)
         """
         self.api_key = api_key
         self.shared_secret = shared_secret
         self.perms = perms
         self.token = token
+        self.api_version = api_version
         self.http = httplib2.Http()
 
     def authenticate_desktop(self):
@@ -89,6 +91,8 @@ class Rtm(object):
         return True
 
     def _call_method(self, method_name, **params):
+        if self.api_version and method_name not in ["rtm.auth.getToken", "rtm.auth.checkToken"]:
+            params.setdefault("v", "2")
         infos, data = self._make_request(method=method_name, **params)
         if infos.status != 200:
             raise RtmException(
