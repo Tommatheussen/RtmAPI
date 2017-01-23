@@ -17,8 +17,8 @@ class RtmRequestFailedException(RtmException):
 
 
 class Rtm(object):
-    _auth_url = "http://api.rememberthemilk.com/services/auth/"
-    _base_url = "http://api.rememberthemilk.com/services/rest/"
+    _auth_url = "https://api.rememberthemilk.com/services/auth/"
+    _base_url = "https://api.rememberthemilk.com/services/rest/"
 
     def __init__(self, api_key, shared_secret, perms="read", token=None, api_version=None):
         """
