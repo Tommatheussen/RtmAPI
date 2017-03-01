@@ -103,9 +103,6 @@ class Rtm(object):
         if (params['format'] and params['format'] == 'json'):
             json_obj = json.loads(data.decode("utf-8"))
 
-            print(json_obj)
-            print(json_obj['rsp'])
-
             return json_obj['rsp']
         else:
             tree = ElementTree.fromstring(data)
