@@ -1,7 +1,8 @@
 import hashlib
 import httplib2
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import xml.etree.ElementTree as ElementTree
+import json
 
 __author__ = "Michael Gruenewald <mail@michaelgruenewald.eu>"
 __all__ = ('Rtm', 'RtmException')
@@ -17,8 +18,8 @@ class RtmRequestFailedException(RtmException):
 
 
 class Rtm(object):
-    _auth_url = "https://api.rememberthemilk.com/services/auth/"
-    _base_url = "https://api.rememberthemilk.com/services/rest/"
+    _auth_url = "http://api.rememberthemilk.com/services/auth/"
+    _base_url = "http://api.rememberthemilk.com/services/rest/"
 
     def __init__(self, api_key, shared_secret, perms="read", token=None, api_version=None):
         """
@@ -98,13 +99,22 @@ class Rtm(object):
             raise RtmException(
                 "Request %s failed (HTTP). Status: %s, reason: %s" % (
                     method_name, infos.status, infos.reason))
-        tree = ElementTree.fromstring(data)
-        assert tree.tag == "rsp"
-        if tree.get("stat") == "fail":
-            err = tree.find("err")
-            raise RtmRequestFailedException(
-                method_name, err.get("code"), err.get("msg"))
-        return RtmObject(tree, tree.tag)
+        
+        if (params['format'] and params['format'] == 'json'):
+            json_obj = json.loads(data.decode("utf-8"))
+
+            print(json_obj)
+            print(json_obj['rsp'])
+
+            return json_obj['rsp']
+        else:
+            tree = ElementTree.fromstring(data)
+            assert tree.tag == "rsp"
+            if tree.get("stat") == "fail":
+                err = tree.find("err")
+                raise RtmRequestFailedException(
+                    method_name, err.get("code"), err.get("msg"))
+            return RtmObject(tree, tree.tag)
 
     def _call_method_auth(self, method_name, **params):
         all_params = dict(api_key=self.api_key, auth_token=self.token)
@@ -117,15 +127,15 @@ class Rtm(object):
             'Cache-Control': 'no-cache, max-age=0'})
 
     def _make_request_url(self, request_url=None, **params):
-        all_params = params.items() + [("api_sig", self._sign_request(params))]
-        params_joined = urllib.urlencode(
+        all_params = list(params.items()) + [("api_sig", self._sign_request(params))]
+        params_joined = urllib.parse.urlencode(
             [(k, v.encode('utf-8')) for k, v in all_params])
         return (request_url or self._base_url) + "?" + params_joined
 
     def _sign_request(self, params):
-        param_pairs = params.items()
+        param_pairs = list(params.items())
         param_pairs.sort()
-        request_string = self.shared_secret + u''.join(k + v
+        request_string = self.shared_secret + ''.join(k + v
                                                        for k, v in param_pairs
                                                        if v is not None)
         return hashlib.md5(request_string.encode('utf-8')).hexdigest()
@@ -206,7 +216,7 @@ class RtmObject(RtmBase):
     def __getattr__(self, name):
         if name == "value":
             return self.__element.text
-        elif name in self.__element.keys():
+        elif name in list(self.__element.keys()):
             return self.__element.get(name)
         elif (self.__name, name) in self.MORE_LISTS:
             return RtmIterable(self.__element,
