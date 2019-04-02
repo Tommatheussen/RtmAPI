@@ -1,11 +1,23 @@
 import hashlib
 import httplib2
+import logging
 import urllib.request, urllib.parse, urllib.error
 import xml.etree.ElementTree as ElementTree
 import json
 
 __author__ = "Michael Gruenewald <mail@michaelgruenewald.eu>"
 __all__ = ('Rtm', 'RtmException')
+
+
+def _anonimize_url(url):
+    parsedurl = urllib.parse.urlparse(url)
+    qs = urllib.parse.parse_qs(parsedurl.query)
+    for param in ('api_key', 'auth_token', 'api_sig'):
+        if param in qs:
+            qs[param] = '...'
+    rejoined = "&".join([key + '=' + "".join(value) for key, value in qs.items()])
+    parsedurl = parsedurl._replace(query=rejoined)
+    return urllib.parse.urlunparse(parsedurl)
 
 
 class RtmException(Exception):
@@ -120,6 +132,7 @@ class Rtm(object):
 
     def _make_request(self, request_url=None, **params):
         final_url = self._make_request_url(request_url, **params)
+        logging.debug(_anonimize_url(final_url))
         return self.http.request(final_url, headers={
             'Cache-Control': 'no-cache, max-age=0'})
 
@@ -166,6 +179,7 @@ class RtmBase(object):
         "participants": "participant",
         "tags": "tag",
         "timezones": "timezone",
+        "lists": "list"
     }
 
     @classmethod
