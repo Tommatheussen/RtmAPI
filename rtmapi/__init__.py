@@ -112,7 +112,7 @@ class Rtm(object):
                 "Request %s failed (HTTP). Status: %s, reason: %s" % (
                     method_name, infos.status, infos.reason))
         
-        if (params['format'] and params['format'] == 'json'):
+        if params.get('format', 'xml') == 'json':
             json_obj = json.loads(data.decode("utf-8"))
 
             return json_obj['rsp']
